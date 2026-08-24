@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asynchronous JavaScript Tutorial</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --code-bg: #1e1e1e;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg-color);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        h1, h2 {
+            color: var(--primary);
+        }
+        h2 {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+        p {
+            margin-bottom: 1rem;
+        }
+        pre {
+            background-color: var(--code-bg);
+            color: #d4d4d4;
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.95rem;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .concept-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mastering Asynchronous JavaScript</h1>
+    <p>JavaScript is single-threaded, meaning it can only do one thing at a time. To prevent long-running tasks (like fetching data from a server) from freezing the entire application, JavaScript uses asynchronous programming.</p>
+
+    <div class="concept-card">
+        <h2>1. Callbacks</h2>
+        <p>A callback is a function passed as an argument to another function, which gets executed after the primary operation completes. This was the original way to handle async operations in JavaScript.</p>
+        <pre><code>function fetchData(callback) {
+    setTimeout(() => {
+        const data = { user: "Alice", role: "Admin" };
+        callback(data); // Executed after 1 second
+    }, 1000);
+}
+
+// Using the callback
+fetchData((result) => {
+    console.log("Data received:", result);
+});</code></pre>
+        <p><em>Warning:</em> Nesting too many callbacks leads to "Callback Hell," making code hard to read and maintain.</p>
+    </div>
+
+    <div class="concept-card">
+        <h2>2. new Promise</h2>
+        <p>A Promise represents the eventual completion (or failure) of an asynchronous operation and its resulting value. It has three states: <strong>Pending</strong>, <strong>Fulfilled</strong>, or <strong>Rejected</strong>.</p>
+        <pre><code>const checkWeather = new Promise((resolve, reject) => {
+    let isRaining = false;
+    
+    setTimeout(() => {
+        if (isRaining) {
+            reject("Picnic cancelled, it's raining.");
+        } else {
+            resolve("Sunny day, let's go!");
+        }
+    }, 1000);
+});
+
+// Consuming the promise
+checkWeather
+    .then(message => console.log(message))
+    .catch(error => console.error(error));</code></pre>
+    </div>
+
+    <div class="concept-card">
+        <h2>3. async / await</h2>
+        <p>Introduced in ES8, <code>async/await</code> is syntactic sugar on top of Promises. It allows you to write asynchronous code that looks and behaves like synchronous code, making it much easier to read.</p>
+        <ul>
+            <li><strong>async:</strong> Makes a function return a Promise automatically.</li>
+            <li><strong>await:</strong> Pauses the execution of the async function until the Promise resolves or rejects.</li>
+        </ul>
+        <pre><code>const getUserProfile = () => {
+    return new Promise(resolve => setTimeout(() => resolve({ id: 1 }), 1000));
+};
+
+async function displayUser() {
+    try {
+        console.log("Fetching...");
+        const user = await getUserProfile(); // Waits here for 1 second
+        console.log("User loaded:", user);
+    } catch (error) {
+        console.error("Failed to load user:", error);
+    }
+}
+
+displayUser();</code></pre>
+    </div>
+
+    <div class="concept-card">
+        <h2>4. Promise.all</h2>
+        <p><code>Promise.all</code> takes an array of Promises and executes them concurrently. It waits for <strong>all</strong> of them to resolve. If even one Promise rejects, the entire <code>Promise.all</code> immediately rejects.</p>
+        <pre><code>const fetchUsers = new Promise(resolve => setTimeout(() => resolve("Users"), 1000));
+const fetchPosts = new Promise(resolve => setTimeout(() => resolve("Posts"), 1500));
+
+async function loadDashboard() {
+    console.time("Dashboard Load");
+    // Both start at the same time, takes ~1.5s total (the longest wait)
+    const [users, posts] = await Promise.all([fetchUsers, fetchPosts]);
+    
+    console.log(users, posts);
+    console.timeEnd("Dashboard Load");
+}
+
+loadDashboard();</code></pre>
+    </div>
+
+    <div class="concept-card">
+        <h2>5. Promise.race</h2>
+        <p><code>Promise.race</code> also takes an array of Promises, but it only waits for the <strong>first</strong> Promise to settle (either resolve or reject). Once the fastest Promise finishes, it ignores the rest.</p>
+        <pre><code>const slowQuery = new Promise(resolve => setTimeout(() => resolve("Slow database data"), 3000));
+const timeout = new Promise((_, reject) => setTimeout(() => reject("Request timed out!"), 2000));
+
+async function fetchWithTimeout() {
+    try {
+        // The timeout will win this race, causing an error
+        const result = await Promise.race([slowQuery, timeout]);
+        console.log(result);
+    } catch (error) {
+        console.error(error); // Logs: "Request timed out!"
+    }
+}
+
+fetchWithTimeout();</code></pre>
+    </div>
+
+</body>
+</html>
